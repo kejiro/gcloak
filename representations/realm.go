@@ -82,7 +82,7 @@ type Realm struct {
 	Roles                                         Roles                    `json:"roles,omitempty"`
 	ScopeMappings                                 []ScopeMapping           `json:"scopeMappings,omitempty"`
 	SmtpServer                                    Map                      `json:"smtpServer,omitempty"`
-	SslRequired                                   *bool                    `json:"sslRequired,omitempty"`
+	SslRequired                                   string                   `json:"sslRequired,omitempty"`
 	SsoSessionIdleTimeout                         int32                    `json:"ssoSessionIdleTimeout,omitempty"`
 	SsoSessionIdleTimeoutRememberMe               int32                    `json:"ssoSessionIdleTimeoutRememberMe,omitempty"`
 	SsoSessionMaxLifespan                         int32                    `json:"ssoSessionMaxLifespan,omitempty"`
