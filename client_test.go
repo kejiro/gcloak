@@ -40,7 +40,7 @@ func (s *ClientSuite) SetupTest() {
 }
 
 func (s *ClientSuite) TestClientList() {
-	list, err := s.client.Realms("master").Clients().List()
+	list, err := s.client.Realm("master").Clients().List()
 	s.Require().NoError(err)
 	s.Require().NotEmpty(list)
 }

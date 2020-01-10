@@ -1,7 +1,7 @@
 package gcloak
 
-// RealmsResource handles all the actions relating to one realm.
-type RealmsResource interface {
+// RealmResource handles all the actions relating to one realm.
+type RealmResource interface {
 	Users() UsersResource
 	Clients() ClientsResource
 	Roles() RolesResource

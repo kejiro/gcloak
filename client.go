@@ -14,7 +14,9 @@ import (
 
 type Client interface {
 	ServerInfo() (representations.ServerInfo, error)
-	Realms(name string) RealmsResource
+	Realm(name string) RealmResource
+	CreateRealm(realm *representations.Realm) error
+	ListRealms() ([]*representations.Realm, error)
 }
 
 func New(baseUrl string, httpClient *http.Client) Client {
@@ -63,8 +65,23 @@ func (c *client) ServerInfo() (representations.ServerInfo, error) {
 	return info, nil
 }
 
-func (c *client) Realms(name string) RealmsResource {
+func (c *client) Realm(name string) RealmResource {
 	return &realmsResource{c, name}
+}
+
+func (c *client) CreateRealm(realm *representations.Realm) error {
+	url := c.composeUrl("realms")
+	_, err := c.doCreate(url, realm)
+	return err
+}
+
+func (c *client) ListRealms() ([]*representations.Realm, error) {
+	url := c.composeUrl("realms")
+	realms := make([]*representations.Realm, 0)
+	if err := c.doList(url, &realms); err != nil {
+		return nil, err
+	}
+	return realms, nil
 }
 
 func (c *client) doCreate(url string, obj interface{}) (string, error) {
