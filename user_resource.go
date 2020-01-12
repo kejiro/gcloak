@@ -5,6 +5,7 @@ import (
 )
 
 type UserResource interface {
+	Delete() error
 	Roles() RoleMappingResource
 	Groups() ([]*representations.Group, error)
 	ResetPassword(credential *representations.Credential) error
@@ -25,6 +26,11 @@ type userResource struct {
 
 func (u *userResource) composeUrl(paths ...string) string {
 	return u.api.composeUrl(append([]string{u.id}, paths...)...)
+}
+
+func (u *userResource) Delete() error {
+	url := u.composeUrl()
+	return u.doDelete(url)
 }
 
 func (u *userResource) Roles() RoleMappingResource {

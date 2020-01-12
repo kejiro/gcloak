@@ -7,7 +7,6 @@ import (
 type UsersResource interface {
 	Count() (int, error)
 	Create(user *representations.User) (id string, err error)
-	Delete(id string) error
 	Get(id string) (*representations.User, error)
 	List() ([]*representations.User, error)
 	Search(username string) ([]*representations.User, error)
@@ -61,8 +60,4 @@ func (u *usersResource) Update(id string, user *representations.User) error {
 
 func (u *usersResource) Resource(id string) UserResource {
 	return &userResource{u, id}
-}
-
-func (u *usersResource) Delete(id string) error {
-	panic("implement me")
 }
