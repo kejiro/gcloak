@@ -9,12 +9,12 @@ type RealmResource interface {
 }
 
 type realmsResource struct {
-	*client
+	api
 	realm string
 }
 
 func (r *realmsResource) composeUrl(paths ...string) string {
-	return r.client.composeUrl(append([]string{"realms", r.realm}, paths...)...)
+	return r.api.composeUrl(append([]string{"realms", r.realm}, paths...)...)
 }
 
 func (r *realmsResource) Users() UsersResource {

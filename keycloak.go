@@ -12,70 +12,49 @@ import (
 	"github.com/kejiro/gcloak/representations"
 )
 
-type Client interface {
-	ServerInfo() (representations.ServerInfo, error)
+type Keycloak interface {
+	ServerInfo() (*representations.ServerInfo, error)
 	Realm(name string) RealmResource
 	CreateRealm(realm *representations.Realm) error
-	ListRealms() ([]*representations.Realm, error)
+	Realms() ([]*representations.Realm, error)
 }
 
-func New(baseUrl string, httpClient *http.Client) Client {
-	return &client{
+func New(baseUrl string, httpClient *http.Client) Keycloak {
+	return &keycloak{
 		httpClient: httpClient,
 		baseUrl:    baseUrl,
 	}
 }
 
-type client struct {
+type keycloak struct {
 	baseUrl    string
 	httpClient *http.Client
 }
 
-func (c *client) composeUrl(paths ...string) string {
+func (c *keycloak) composeUrl(paths ...string) string {
 	return strings.Join(append([]string{c.baseUrl, "admin"}, paths...), "/")
 }
 
-func (c *client) ServerInfo() (representations.ServerInfo, error) {
-	info := representations.ServerInfo{}
-	req, err := http.NewRequest(http.MethodGet, c.baseUrl+"/admin/serverinfo", nil)
-	if err != nil {
-		return info, err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	res, err := c.httpClient.Do(req)
-	if err != nil {
-		return info, err
-	}
-	switch res.StatusCode {
-	case http.StatusUnauthorized:
-		return info, ErrAccessDenied
-	case http.StatusNotFound:
-		return info, ErrNotFound
-	case http.StatusOK:
-	// Do nothing
-	default:
-		return info, errors.New(res.Status)
-	}
-
-	dec := jsoniter.NewDecoder(res.Body)
-	if err := dec.Decode(&info); err != nil {
-		return info, err
+func (c *keycloak) ServerInfo() (*representations.ServerInfo, error) {
+	url := c.composeUrl("serverinfo")
+	info := new(representations.ServerInfo)
+	if err := c.doGet(url, info); err != nil {
+		return nil, err
 	}
 	return info, nil
 }
 
-func (c *client) Realm(name string) RealmResource {
+func (c *keycloak) Realm(name string) RealmResource {
 	return &realmsResource{c, name}
 }
 
-func (c *client) CreateRealm(realm *representations.Realm) error {
+func (c *keycloak) CreateRealm(realm *representations.Realm) error {
 	url := c.composeUrl("realms")
 	_, err := c.doCreate(url, realm)
 	return err
 }
 
-func (c *client) ListRealms() ([]*representations.Realm, error) {
+func (c *keycloak) Realms() ([]*representations.Realm, error) {
 	url := c.composeUrl("realms")
 	realms := make([]*representations.Realm, 0)
 	if err := c.doList(url, &realms); err != nil {
@@ -84,13 +63,16 @@ func (c *client) ListRealms() ([]*representations.Realm, error) {
 	return realms, nil
 }
 
-func (c *client) doCreate(url string, obj interface{}) (string, error) {
-	reqBody, err := jsoniter.Marshal(obj)
-	if err != nil {
-		return "", err
+func (c *keycloak) doCreate(url string, obj interface{}) (string, error) {
+	var reqBody *bytes.Reader
+	if obj != nil {
+		body, err := jsoniter.Marshal(obj)
+		if err != nil {
+			return "", err
+		}
+		reqBody = bytes.NewReader(body)
 	}
-
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(reqBody))
+	req, err := http.NewRequest(http.MethodPost, url, reqBody)
 	if err != nil {
 		return "", err
 	}
@@ -106,6 +88,9 @@ func (c *client) doCreate(url string, obj interface{}) (string, error) {
 	}
 
 	userUri := res.Header.Get("Location")
+	if userUri == "" {
+		return "", nil
+	}
 	paths := strings.Split(userUri, "/")
 	if len(paths) == 0 {
 		return "", ErrInvalidId
@@ -113,7 +98,7 @@ func (c *client) doCreate(url string, obj interface{}) (string, error) {
 	return paths[len(paths)-1], nil
 }
 
-func (c *client) doGet(url string, obj interface{}) error {
+func (c *keycloak) doGet(url string, obj interface{}) error {
 	req, err := c.httpClient.Get(url)
 	if err != nil {
 		return err
@@ -125,13 +110,17 @@ func (c *client) doGet(url string, obj interface{}) error {
 	return dec.Decode(obj)
 }
 
-func (c *client) doUpdate(url string, obj interface{}) error {
-	reqBody, err := jsoniter.Marshal(obj)
-	if err != nil {
-		return err
+func (c *keycloak) doUpdate(url string, obj interface{}) error {
+	var reqBody *bytes.Reader
+	if obj != nil {
+		body, err := jsoniter.Marshal(obj)
+		if err != nil {
+			return err
+		}
+		reqBody = bytes.NewReader(body)
 	}
 
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(reqBody))
+	req, err := http.NewRequest(http.MethodPut, url, reqBody)
 	if err != nil {
 		return err
 	}
@@ -148,7 +137,7 @@ func (c *client) doUpdate(url string, obj interface{}) error {
 	return nil
 }
 
-func (c *client) doCount(url string) (int, error) {
+func (c *keycloak) doCount(url string) (int, error) {
 	res, err := c.httpClient.Get(url)
 	if err != nil {
 		return 0, err
@@ -169,7 +158,7 @@ func (c *client) doCount(url string) (int, error) {
 	return int(cnt), nil
 }
 
-func (c *client) doList(url string, obj interface{}) error {
+func (c *keycloak) doList(url string, obj interface{}) error {
 	res, err := c.httpClient.Get(url)
 	if err != nil {
 		return err
@@ -182,7 +171,7 @@ func (c *client) doList(url string, obj interface{}) error {
 	return dec.Decode(obj)
 }
 
-func (c *client) doDelete(url string) error {
+func (c *keycloak) doDelete(url string) error {
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
@@ -196,4 +185,8 @@ func (c *client) doDelete(url string) error {
 		return errors.New(res.Status)
 	}
 	return nil
+}
+
+func (c *keycloak) do(req *http.Request) (*http.Response, error) {
+	return c.httpClient.Do(req)
 }

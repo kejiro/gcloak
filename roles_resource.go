@@ -12,11 +12,11 @@ type RolesResource interface {
 }
 
 type rolesResource struct {
-	*realmsResource
+	api
 }
 
 func (r *rolesResource) composeUrl(paths ...string) string {
-	return r.realmsResource.composeUrl(append([]string{"roles"}, paths...)...)
+	return r.api.composeUrl(append([]string{"roles"}, paths...)...)
 }
 
 func (r *rolesResource) Create(role *representations.Role) (id string, err error) {

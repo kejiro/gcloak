@@ -4,5 +4,5 @@ type GroupsResource interface {
 }
 
 type groupsResource struct {
-	*realmsResource
+	api
 }

@@ -15,11 +15,11 @@ type ClientsResource interface {
 }
 
 type clientsResource struct {
-	*realmsResource
+	api
 }
 
 func (c *clientsResource) composeUrl(paths ...string) string {
-	return c.realmsResource.composeUrl(append([]string{"clients"}, paths...)...)
+	return c.api.composeUrl(append([]string{"clients"}, paths...)...)
 }
 
 func (c *clientsResource) Create(client *representations.Client) (id string, err error) {
@@ -57,4 +57,8 @@ func (c *clientsResource) List() ([]*representations.Client, error) {
 
 func (c *clientsResource) Resource(id string) ClientResource {
 	return &clientResource{c, id}
+}
+
+func (c *clientsResource) Delete(id string) error {
+	panic("implement me")
 }

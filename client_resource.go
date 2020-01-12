@@ -16,12 +16,12 @@ type ClientResource interface {
 }
 
 type clientResource struct {
-	*clientsResource
+	api
 	id string
 }
 
 func (c *clientResource) composeUrl(paths ...string) string {
-	return c.clientsResource.composeUrl(append([]string{c.id}, paths...)...)
+	return c.api.composeUrl(append([]string{c.id}, paths...)...)
 }
 
 func (c *clientResource) ServiceAccountUser() (*representations.User, error) {
@@ -40,7 +40,7 @@ func (c *clientResource) GenerateSecret() (*representations.Credential, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := c.httpClient.Do(req)
+	res, err := c.do(req)
 	if err != nil {
 		return nil, err
 	}

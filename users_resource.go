@@ -11,15 +11,15 @@ type UsersResource interface {
 	Get(id string) (*representations.User, error)
 	List() ([]*representations.User, error)
 	Search(username string) ([]*representations.User, error)
-	Update(id string, user *representations.User) error
+	Resource(id string) UserResource
 }
 
 type usersResource struct {
-	*realmsResource
+	api
 }
 
 func (u *usersResource) composeUrl(paths ...string) string {
-	return u.realmsResource.composeUrl(append([]string{"users"}, paths...)...)
+	return u.api.composeUrl(append([]string{"users"}, paths...)...)
 }
 
 func (u *usersResource) Count() (int, error) {
@@ -57,4 +57,12 @@ func (u *usersResource) Search(username string) ([]*representations.User, error)
 func (u *usersResource) Update(id string, user *representations.User) error {
 	url := u.composeUrl(id)
 	return u.doUpdate(url, user)
+}
+
+func (u *usersResource) Resource(id string) UserResource {
+	return &userResource{u, id}
+}
+
+func (u *usersResource) Delete(id string) error {
+	panic("implement me")
 }

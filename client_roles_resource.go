@@ -5,11 +5,11 @@ import (
 )
 
 type clientRolesResource struct {
-	*clientResource
+	api
 }
 
 func (c *clientRolesResource) composeUrl(paths ...string) string {
-	return c.clientsResource.composeUrl(append([]string{"roles"}, paths...)...)
+	return c.api.composeUrl(append([]string{"roles"}, paths...)...)
 }
 
 func (c *clientRolesResource) Create(role *representations.Role) (id string, err error) {
